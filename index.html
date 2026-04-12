@@ -1,17 +1,289 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-
-function App() {
-  return (
-    <div style={{background:'#070707',minHeight:'100vh',color:'#fff',fontFamily:'monospace',padding:'40px',display:'flex',alignItems:'center',justifyContent:'center'}}>
-      <div style={{textAlign:'center'}}>
-        <h1 style={{color:'#00aaff',fontSize:'36px',letterSpacing:'6px'}}>TOM x TOU</h1>
-        <p style={{color:'#555',letterSpacing:'3px'}}>INSTAGRAM AI STUDIO</p>
-        <p style={{color:'#00ff88',marginTop:'20px'}}>LIVE AND RUNNING</p>
-      </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>TOM TOU Instagram Studio</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#070707;color:#efefef;font-family:'Courier New',monospace;min-height:100vh}
+.grain{position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1;max-width:800px;margin:0 auto;padding:20px}
+header{padding:24px 0 20px;border-bottom:1px solid #1e1e1e;margin-bottom:0}
+.eyebrow{font-size:9px;letter-spacing:4px;color:#555;margin-bottom:6px}
+h1{font-size:clamp(22px,5vw,40px);font-weight:900;letter-spacing:5px;color:#00aaff;margin-bottom:6px}
+.sub{font-size:11px;color:#555;letter-spacing:1px}
+.brand-row{display:flex;gap:8px;margin:16px 0}
+.brand-btn{padding:5px 16px;background:transparent;border:1px solid #1e1e1e;color:#555;font-family:'Courier New',monospace;font-size:11px;letter-spacing:3px;cursor:pointer;border-radius:2px}
+.brand-btn.active-tom{border:1px solid #00aaff;color:#00aaff;background:#001829}
+.brand-btn.active-tou{border:1px solid #d4f000;color:#d4f000;background:#191e00}
+.tabs{display:flex;overflow-x:auto;gap:8px;padding:16px 0;scrollbar-width:none;border-bottom:1px solid #1e1e1e}
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 12px;background:#0f0f0f;border:1px solid #1e1e1e;color:#555;font-family:'Courier New',monospace;cursor:pointer;border-radius:4px;white-space:nowrap;min-width:76px;font-size:9px;letter-spacing:2px}
+.tab .icon{font-size:18px}
+.tab.active-tom{border:1px solid #00aaff;color:#00aaff;background:#001829}
+.tab.active-tou{border:1px solid #d4f000;color:#d4f000;background:#191e00}
+.tab.done::after{content:'✓';color:#00ff88;font-size:10px}
+.panel{padding:20px 0}
+.panel-title{font-size:15px;font-weight:700;letter-spacing:2px;margin-bottom:4px}
+.panel-desc{font-size:11px;color:#555;letter-spacing:1px;margin-bottom:20px}
+.field-group{margin-bottom:14px}
+label{display:block;font-size:9px;letter-spacing:3px;color:#555;margin-bottom:5px}
+input,textarea{width:100%;background:#0f0f0f;border:1px solid #1e1e1e;border-radius:4px;color:#efefef;font-family:'Courier New',monospace;font-size:13px;padding:11px 13px;outline:none;box-sizing:border-box}
+textarea{resize:vertical;line-height:1.7}
+.run-btn{width:100%;padding:15px;border:none;border-radius:4px;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#000;cursor:pointer;margin-bottom:16px}
+.run-btn:disabled{opacity:0.4;cursor:not-allowed}
+.output-box{background:#0f0f0f;border:1px solid #1e1e1e;border-radius:6px;overflow:hidden;margin-bottom:20px}
+.out-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #1e1e1e}
+.out-label{font-size:10px;letter-spacing:3px}
+.copy-btn{background:transparent;border:1px solid #1e1e1e;color:#efefef;font-family:'Courier New',monospace;font-size:10px;letter-spacing:2px;padding:4px 11px;cursor:pointer;border-radius:2px}
+.output-pre{padding:18px;font-size:12px;line-height:1.8;white-space:pre-wrap;word-break:break-word;color:#ccc;max-height:380px;overflow-y:auto}
+.loading{text-align:center;padding:30px;color:#555;letter-spacing:2px;font-size:12px}
+.nav-row{display:flex;gap:10px;margin-top:20px}
+.nav-btn{padding:12px 20px;background:#0f0f0f;border:1px solid #1e1e1e;color:#555;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;border-radius:4px}
+.nav-next-tom{background:#001829;border:1px solid #00aaff;color:#00aaff;margin-left:auto}
+.nav-next-tou{background:#191e00;border:1px solid #d4f000;color:#d4f000;margin-left:auto}
+.save-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.save-btn{padding:12px 20px;border:none;border-radius:4px;font-family:'Courier New',monospace;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer}
+.saved-block{margin-bottom:16px;border-radius:6px;overflow:hidden;border:1px solid #1e1e1e}
+.saved-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#0f0f0f;border-bottom:1px solid #1e1e1e;font-size:12px;font-weight:700;letter-spacing:2px}
+.saved-pre{padding:16px;font-size:11px;line-height:1.8;white-space:pre-wrap;word-break:break-word;color:#bbb;max-height:280px;overflow-y:auto}
+.empty{padding:14px;font-size:11px;color:#555}
+.view-btn{padding:8px 16px;background:transparent;border:1px solid #1e1e1e;color:#555;font-family:'Courier New',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;border-radius:2px}
+.view-btn.active{color:#00aaff;border-color:#00aaff}
+.views{display:flex;gap:0;margin-bottom:0}
+footer{text-align:center;font-size:9px;letter-spacing:3px;color:#555;padding:32px 0}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">INSTAGRAM AI ENGINE</div>
+    <h1 id="main-title">PROMPT STUDIO</h1>
+    <p class="sub">5-step content system · TOM × TOU</p>
+    <div class="brand-row">
+      <button class="brand-btn active-tom" onclick="setBrand('TOM')" id="btn-tom">TOM</button>
+      <button class="brand-btn" onclick="setBrand('TOU')" id="btn-tou">TOU</button>
     </div>
-  );
+    <div class="views">
+      <button class="view-btn active" onclick="setView('studio')" id="v-studio">⚡ STUDIO</button>
+      <button class="view-btn" onclick="setView('outputs')" id="v-outputs">💾 OUTPUTS</button>
+    </div>
+  </header>
+
+  <!-- STUDIO VIEW -->
+  <div id="view-studio">
+    <div class="tabs" id="tabs"></div>
+    <div class="panel" id="panel"></div>
+  </div>
+
+  <!-- OUTPUTS VIEW -->
+  <div id="view-outputs" style="display:none;padding-top:20px">
+    <div class="save-row">
+      <button class="save-btn" id="save-all-btn" onclick="saveAll()" style="background:#00aaff;color:#000">⬇ SAVE ALL AS .TXT</button>
+    </div>
+    <div id="all-outputs"></div>
+  </div>
+
+  <footer>TOM × TOU · Instagram AI Studio · Built for Rub</footer>
+</div>
+
+<script>
+const PROMPTS = [
+  {
+    id:1,icon:'🔍',label:'AUDIT',title:'Account Audit',desc:'What\'s working, what\'s not, what to double down on.',
+    fields:[
+      {key:'niche',label:'YOUR NICHE',placeholder:'e.g. luxury fragrance dupes for men',type:'input'},
+      {key:'audience',label:'YOUR AUDIENCE',placeholder:'e.g. 18-35 yr olds who want designer scent without the price',type:'input'},
+      {key:'posts',label:'TOP 5 POSTS (paste or describe)',placeholder:'Paste your best performing captions...',type:'textarea'},
+    ],
+    build:(f,brand)=>`Analyze my Instagram account. My niche is ${f.niche}, my audience is ${f.audience}, and my top 5 best performing posts are: ${f.posts}. Brand name: ${brand}. Tell me exactly what\'s working, what\'s not, and what I should double down on. Be specific, numbered, and brutally honest.`
+  },
+  {
+    id:2,icon:'📅',label:'CALENDAR',title:'30-Day Calendar',desc:'2 posts per day — Reels, carousels, stories mixed.',
+    fields:[
+      {key:'customer',label:'IDEAL CUSTOMER',placeholder:'e.g. budget-conscious fragrance lovers aged 18-30',type:'input'},
+      {key:'product',label:'YOUR PRODUCT',placeholder:'e.g. fragrance dupes via Shopify',type:'input'},
+    ],
+    build:(f,brand)=>`Create a 30-day Instagram content calendar for brand ${brand}. 2 posts per day. Mix: Reels, carousels, story-based posts. Every piece attracts ${f.customer} and leads them toward ${f.product}. Format: Day 1 | Post 1 | Format | Hook/Topic. Make it detailed and ready to execute.`
+  },
+  {
+    id:3,icon:'🎣',label:'HOOKS',title:'Scroll-Stopping Hooks',desc:'10 hooks using curiosity, controversy, or shock.',
+    fields:[
+      {key:'angle',label:'TONE / ANGLE',placeholder:'e.g. bold, provocative, luxury, masculine',type:'input'},
+      {key:'product',label:'PRODUCT/TOPIC',placeholder:'e.g. fragrance dupes, affordable perfume',type:'input'},
+    ],
+    build:(f,brand)=>`Write 10 scroll-stopping Instagram hooks for ${brand} in the ${f.product} space. Tone: ${f.angle}. Use curiosity, controversy, or shock value. Each hook must be UNDER 10 words. Number each one. Make someone NEED to keep reading.`
+  },
+  {
+    id:4,icon:'✍️',label:'REWRITE',title:'Emotional Rewrite',desc:'Rewrite posts with storytelling, simplicity, and CTA.',
+    fields:[
+      {key:'posts',label:'PASTE YOUR POSTS',placeholder:'Paste 1-5 existing captions here...',type:'textarea'},
+      {key:'cta',label:'CALL TO ACTION',placeholder:'e.g. Link in bio | DM DUPE for the link',type:'input'},
+    ],
+    build:(f,brand)=>`Rewrite these Instagram captions for ${brand} using: emotional storytelling, third-grade reading level, short punchy sentences, strong CTA at end. CTA: "${f.cta}". Rewrite each post separately. Posts: ${f.posts}`
+  },
+  {
+    id:5,icon:'🚀',label:'VIRAL',title:'Viral Content Ideas',desc:'5 trending ideas, each under 30 minutes to create.',
+    fields:[
+      {key:'niche',label:'YOUR NICHE',placeholder:'e.g. fragrance / beauty / lifestyle',type:'input'},
+      {key:'format',label:'FORMAT PREFERENCE',placeholder:'e.g. Reels, carousels, or both',type:'input'},
+    ],
+    build:(f,brand)=>`Give me 5 viral Instagram content ideas for ${brand} trending in the ${f.niche} niche. Format: ${f.format}. Each idea creatable in under 30 mins. For each: Hook | Format | Why It Will Go Viral | Execution tip.`
+  }
+];
+
+let brand='TOM';
+let activeTab=0;
+let fields={};
+let outputs={};
+let loading=false;
+let currentView='studio';
+
+function setBrand(b){
+  brand=b;
+  document.getElementById('btn-tom').className='brand-btn'+(b==='TOM'?' active-tom':'');
+  document.getElementById('btn-tou').className='brand-btn'+(b==='TOU'?' active-tou':'');
+  document.getElementById('main-title').style.color=b==='TOM'?'#00aaff':'#d4f000';
+  document.getElementById('save-all-btn').style.background=b==='TOM'?'#00aaff':'#d4f000';
+  renderTabs();
+  renderPanel();
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+function setView(v){
+  currentView=v;
+  document.getElementById('view-studio').style.display=v==='studio'?'block':'none';
+  document.getElementById('view-outputs').style.display=v==='outputs'?'block':'none';
+  document.getElementById('v-studio').className='view-btn'+(v==='studio'?' active':'');
+  document.getElementById('v-outputs').className='view-btn'+(v==='outputs'?' active':'');
+  if(v==='outputs') renderOutputs();
+}
+
+function setTab(i){
+  activeTab=i;
+  fields={};
+  renderTabs();
+  renderPanel();
+}
+
+function renderTabs(){
+  const acc=brand==='TOM'?'#00aaff':'#d4f000';
+  const bg=brand==='TOM'?'#001829':'#191e00';
+  document.getElementById('tabs').innerHTML=PROMPTS.map((p,i)=>`
+    <button class="tab${activeTab===i?(brand==='TOM'?' active-tom':' active-tou'):''}" onclick="setTab(${i})">
+      <span class="icon">${p.icon}</span>
+      <span>${p.label}</span>
+      ${outputs[i]?'<span style="color:#00ff88;font-size:10px">✓</span>':''}
+    </button>
+  `).join('');
+}
+
+function renderPanel(){
+  const p=PROMPTS[activeTab];
+  const acc=brand==='TOM'?'#00aaff':'#d4f000';
+  const fieldsHtml=p.fields.map(f=>`
+    <div class="field-group">
+      <label>${f.label}</label>
+      ${f.type==='textarea'
+        ?`<textarea rows="4" id="f-${f.key}" placeholder="${f.placeholder}" oninput="updateField('${f.key}',this.value)">${fields[f.key]||''}</textarea>`
+        :`<input type="text" id="f-${f.key}" placeholder="${f.placeholder}" value="${fields[f.key]||''}" oninput="updateField('${f.key}',this.value)"/>`
+      }
+    </div>
+  `).join('');
+  const outputHtml=outputs[activeTab]?`
+    <div class="output-box">
+      <div class="out-head">
+        <span class="out-label" style="color:${acc}">OUTPUT — PROMPT ${activeTab+1}</span>
+        <button class="copy-btn" onclick="copyOutput(${activeTab})">COPY</button>
+      </div>
+      <pre class="output-pre">${outputs[activeTab]}</pre>
+    </div>
+  `:'';
+  const navHtml=`
+    <div class="nav-row">
+      ${activeTab>0?`<button class="nav-btn" onclick="setTab(${activeTab-1})">← ${PROMPTS[activeTab-1].label}</button>`:''}
+      ${activeTab<4?`<button class="nav-btn ${brand==='TOM'?'nav-next-tom':'nav-next-tou'}" onclick="setTab(${activeTab+1})">${PROMPTS[activeTab+1].label} →</button>`:''}
+    </div>
+  `;
+  document.getElementById('panel').innerHTML=`
+    <div class="panel-title">${p.icon} ${p.title}</div>
+    <div class="panel-desc">${p.desc}</div>
+    ${fieldsHtml}
+    <button class="run-btn" id="run-btn" style="background:${acc}" onclick="runPrompt()" ${loading?'disabled':''}>
+      ${loading?'⏳ GENERATING...':'▶  RUN PROMPT '+p.id}
+    </button>
+    ${loading?'<div class="loading">⟳ Claude is generating your content...</div>':''}
+    ${outputHtml}
+    ${navHtml}
+  `;
+}
+
+function updateField(key,val){
+  fields[key]=val;
+}
+
+async function runPrompt(){
+  const p=PROMPTS[activeTab];
+  const allFilled=p.fields.every(f=>(fields[f.key]||'').trim());
+  if(!allFilled){alert('Fill in all fields first.');return;}
+  loading=true;
+  renderPanel();
+  const built=p.build(fields,brand);
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`You are an expert Instagram growth strategist for ${brand}, a fragrance/lifestyle e-commerce brand. Be specific, creative, actionable. Format responses cleanly.`,
+        messages:[{role:'user',content:built}]
+      })
+    });
+    const data=await res.json();
+    const text=data?.content?.map(b=>b.text||'').join('\n')||'No response.';
+    outputs[activeTab]=text;
+  }catch(e){
+    outputs[activeTab]='Error: '+e.message;
+  }
+  loading=false;
+  renderPanel();
+  renderTabs();
+}
+
+function copyOutput(idx){
+  navigator.clipboard.writeText(outputs[idx]||'');
+  alert('Copied!');
+}
+
+function renderOutputs(){
+  document.getElementById('all-outputs').innerHTML=PROMPTS.map((p,i)=>`
+    <div class="saved-block">
+      <div class="saved-head">
+        <span>${p.icon} ${p.title}</span>
+        <span style="color:${outputs[i]?'#00ff88':'#555'};font-size:11px">${outputs[i]?'✓ COMPLETE':'NOT RUN'}</span>
+      </div>
+      ${outputs[i]
+        ?`<pre class="saved-pre">${outputs[i]}</pre>`
+        :`<div class="empty">Run this prompt in Studio first.</div>`
+      }
+    </div>
+  `).join('');
+}
+
+function saveAll(){
+  const lines=PROMPTS.map((p,i)=>
+    `${'='.repeat(50)}\n${p.icon} ${p.title.toUpperCase()}\n${'='.repeat(50)}\n${outputs[i]||'(not run yet)'}\n`
+  ).join('\n');
+  const blob=new Blob([`TOM/TOU INSTAGRAM STRATEGY — ${brand}\nGenerated: ${new Date().toLocaleString()}\n\n`+lines],{type:'text/plain'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`${brand}_instagram_strategy_${Date.now()}.txt`;a.click();
+}
+
+// Init
+renderTabs();
+renderPanel();
+</script>
+</body>
+</html>
