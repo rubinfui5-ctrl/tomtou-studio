@@ -52,6 +52,17 @@ textarea{resize:vertical;line-height:1.7}
 .view-btn.active{color:#00aaff;border-color:#00aaff}
 .views{display:flex;gap:0;margin-bottom:0}
 footer{text-align:center;font-size:9px;letter-spacing:3px;color:#555;padding:32px 0}
+.ig-connect{background:#0f0f0f;border:1px solid #1e1e1e;border-radius:6px;padding:16px;margin:16px 0}
+.ig-connect-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.ig-connect-title{font-size:10px;letter-spacing:3px;color:#555}
+.ig-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:10px;letter-spacing:2px;font-weight:700}
+.ig-badge.connected{background:#00ff8822;border:1px solid #00ff88;color:#00ff88}
+.ig-badge.disconnected{background:#55555522;border:1px solid #333;color:#555}
+.ig-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ig-fields .field-full{grid-column:1/-1}
+.ig-connect-btn{margin-top:12px;width:100%;padding:11px;background:transparent;border:1px solid #e1306c;color:#e1306c;font-family:'Courier New',monospace;font-size:11px;font-weight:700;letter-spacing:3px;cursor:pointer;border-radius:4px}
+.ig-connect-btn.connected-btn{background:#e1306c22}
+.ig-disconnect-btn{margin-top:6px;width:100%;padding:8px;background:transparent;border:1px solid #1e1e1e;color:#555;font-family:'Courier New',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;border-radius:4px}
 </style>
 </head>
 <body>
@@ -65,6 +76,34 @@ footer{text-align:center;font-size:9px;letter-spacing:3px;color:#555;padding:32p
       <button class="brand-btn active-tom" onclick="setBrand('TOM')" id="btn-tom">TOM</button>
       <button class="brand-btn" onclick="setBrand('TOU')" id="btn-tou">TOU</button>
     </div>
+    <!-- Instagram Connect -->
+    <div class="ig-connect" id="ig-connect-box">
+      <div class="ig-connect-head">
+        <span class="ig-connect-title">📸 INSTAGRAM ACCOUNT</span>
+        <span class="ig-badge disconnected" id="ig-status-badge">NOT CONNECTED</span>
+      </div>
+      <div class="ig-fields" id="ig-fields-area">
+        <div class="field-group">
+          <label>HANDLE</label>
+          <input type="text" id="ig-handle" placeholder="@yourusername" oninput="igField()"/>
+        </div>
+        <div class="field-group">
+          <label>FOLLOWERS</label>
+          <input type="text" id="ig-followers" placeholder="e.g. 4,200" oninput="igField()"/>
+        </div>
+        <div class="field-group field-full">
+          <label>BIO / DESCRIPTION</label>
+          <input type="text" id="ig-bio" placeholder="e.g. Luxury fragrance dupes · Shopify · DM for link" oninput="igField()"/>
+        </div>
+        <div class="field-group field-full">
+          <label>POSTING FREQUENCY</label>
+          <input type="text" id="ig-freq" placeholder="e.g. 2 posts/day, 5 stories/day" oninput="igField()"/>
+        </div>
+      </div>
+      <button class="ig-connect-btn" id="ig-connect-btn" onclick="connectIG()">🔗 SAVE ACCOUNT</button>
+      <button class="ig-disconnect-btn" id="ig-disconnect-btn" onclick="disconnectIG()" style="display:none">✕ DISCONNECT</button>
+    </div>
+
     <div class="views">
       <button class="view-btn active" onclick="setView('studio')" id="v-studio">⚡ STUDIO</button>
       <button class="view-btn" onclick="setView('outputs')" id="v-outputs">💾 OUTPUTS</button>
@@ -97,7 +136,7 @@ const PROMPTS = [
       {key:'audience',label:'YOUR AUDIENCE',placeholder:'e.g. 18-35 yr olds who want designer scent without the price',type:'input'},
       {key:'posts',label:'TOP 5 POSTS (paste or describe)',placeholder:'Paste your best performing captions...',type:'textarea'},
     ],
-    build:(f,brand)=>`Analyze my Instagram account. My niche is ${f.niche}, my audience is ${f.audience}, and my top 5 best performing posts are: ${f.posts}. Brand name: ${brand}. Tell me exactly what\'s working, what\'s not, and what I should double down on. Be specific, numbered, and brutally honest.`
+    build:(f,brand)=>`Analyze my Instagram account. My niche is ${f.niche}, my audience is ${f.audience}, and my top 5 best performing posts are: ${f.posts}. Brand name: ${brand}.${igContext()} Tell me exactly what\'s working, what\'s not, and what I should double down on. Be specific, numbered, and brutally honest.`
   },
   {
     id:2,icon:'📅',label:'CALENDAR',title:'30-Day Calendar',desc:'2 posts per day — Reels, carousels, stories mixed.',
@@ -105,7 +144,7 @@ const PROMPTS = [
       {key:'customer',label:'IDEAL CUSTOMER',placeholder:'e.g. budget-conscious fragrance lovers aged 18-30',type:'input'},
       {key:'product',label:'YOUR PRODUCT',placeholder:'e.g. fragrance dupes via Shopify',type:'input'},
     ],
-    build:(f,brand)=>`Create a 30-day Instagram content calendar for brand ${brand}. 2 posts per day. Mix: Reels, carousels, story-based posts. Every piece attracts ${f.customer} and leads them toward ${f.product}. Format: Day 1 | Post 1 | Format | Hook/Topic. Make it detailed and ready to execute.`
+    build:(f,brand)=>`Create a 30-day Instagram content calendar for brand ${brand}.${igContext()} 2 posts per day. Mix: Reels, carousels, story-based posts. Every piece attracts ${f.customer} and leads them toward ${f.product}. Format: Day 1 | Post 1 | Format | Hook/Topic. Make it detailed and ready to execute.`
   },
   {
     id:3,icon:'🎣',label:'HOOKS',title:'Scroll-Stopping Hooks',desc:'10 hooks using curiosity, controversy, or shock.',
@@ -113,7 +152,7 @@ const PROMPTS = [
       {key:'angle',label:'TONE / ANGLE',placeholder:'e.g. bold, provocative, luxury, masculine',type:'input'},
       {key:'product',label:'PRODUCT/TOPIC',placeholder:'e.g. fragrance dupes, affordable perfume',type:'input'},
     ],
-    build:(f,brand)=>`Write 10 scroll-stopping Instagram hooks for ${brand} in the ${f.product} space. Tone: ${f.angle}. Use curiosity, controversy, or shock value. Each hook must be UNDER 10 words. Number each one. Make someone NEED to keep reading.`
+    build:(f,brand)=>`Write 10 scroll-stopping Instagram hooks for ${brand} in the ${f.product} space.${igContext()} Tone: ${f.angle}. Use curiosity, controversy, or shock value. Each hook must be UNDER 10 words. Number each one. Make someone NEED to keep reading.`
   },
   {
     id:4,icon:'✍️',label:'REWRITE',title:'Emotional Rewrite',desc:'Rewrite posts with storytelling, simplicity, and CTA.',
@@ -121,7 +160,7 @@ const PROMPTS = [
       {key:'posts',label:'PASTE YOUR POSTS',placeholder:'Paste 1-5 existing captions here...',type:'textarea'},
       {key:'cta',label:'CALL TO ACTION',placeholder:'e.g. Link in bio | DM DUPE for the link',type:'input'},
     ],
-    build:(f,brand)=>`Rewrite these Instagram captions for ${brand} using: emotional storytelling, third-grade reading level, short punchy sentences, strong CTA at end. CTA: "${f.cta}". Rewrite each post separately. Posts: ${f.posts}`
+    build:(f,brand)=>`Rewrite these Instagram captions for ${brand} using: emotional storytelling, third-grade reading level, short punchy sentences, strong CTA at end.${igContext()} CTA: "${f.cta}". Rewrite each post separately. Posts: ${f.posts}`
   },
   {
     id:5,icon:'🚀',label:'VIRAL',title:'Viral Content Ideas',desc:'5 trending ideas, each under 30 minutes to create.',
@@ -129,7 +168,7 @@ const PROMPTS = [
       {key:'niche',label:'YOUR NICHE',placeholder:'e.g. fragrance / beauty / lifestyle',type:'input'},
       {key:'format',label:'FORMAT PREFERENCE',placeholder:'e.g. Reels, carousels, or both',type:'input'},
     ],
-    build:(f,brand)=>`Give me 5 viral Instagram content ideas for ${brand} trending in the ${f.niche} niche. Format: ${f.format}. Each idea creatable in under 30 mins. For each: Hook | Format | Why It Will Go Viral | Execution tip.`
+    build:(f,brand)=>`Give me 5 viral Instagram content ideas for ${brand} trending in the ${f.niche} niche.${igContext()} Format: ${f.format}. Each idea creatable in under 30 mins. For each: Hook | Format | Why It Will Go Viral | Execution tip.`
   }
 ];
 
@@ -139,6 +178,66 @@ let fields={};
 let outputs={};
 let loading=false;
 let currentView='studio';
+let igAccount=JSON.parse(localStorage.getItem('igAccount')||'null');
+
+// ── Instagram connect helpers ──────────────────────────────────────────────
+function igField(){
+  // placeholder for future live-validation enhancements
+}
+
+function connectIG(){
+  const handle=document.getElementById('ig-handle').value.trim();
+  const followers=document.getElementById('ig-followers').value.trim();
+  const bio=document.getElementById('ig-bio').value.trim();
+  const freq=document.getElementById('ig-freq').value.trim();
+  if(!handle){alert('Enter your Instagram handle first.');return;}
+  igAccount={handle,followers,bio,freq};
+  localStorage.setItem('igAccount',JSON.stringify(igAccount));
+  renderIGStatus();
+}
+
+function disconnectIG(){
+  igAccount=null;
+  localStorage.removeItem('igAccount');
+  document.getElementById('ig-handle').value='';
+  document.getElementById('ig-followers').value='';
+  document.getElementById('ig-bio').value='';
+  document.getElementById('ig-freq').value='';
+  renderIGStatus();
+}
+
+function renderIGStatus(){
+  const badge=document.getElementById('ig-status-badge');
+  const disconnectBtn=document.getElementById('ig-disconnect-btn');
+  const connectBtn=document.getElementById('ig-connect-btn');
+  if(igAccount){
+    badge.className='ig-badge connected';
+    badge.textContent='✓ '+igAccount.handle;
+    connectBtn.textContent='✎ UPDATE ACCOUNT';
+    connectBtn.className='ig-connect-btn connected-btn';
+    disconnectBtn.style.display='block';
+    // re-populate fields
+    document.getElementById('ig-handle').value=igAccount.handle||'';
+    document.getElementById('ig-followers').value=igAccount.followers||'';
+    document.getElementById('ig-bio').value=igAccount.bio||'';
+    document.getElementById('ig-freq').value=igAccount.freq||'';
+  }else{
+    badge.className='ig-badge disconnected';
+    badge.textContent='NOT CONNECTED';
+    connectBtn.textContent='🔗 SAVE ACCOUNT';
+    connectBtn.className='ig-connect-btn';
+    disconnectBtn.style.display='none';
+  }
+}
+
+function igContext(){
+  if(!igAccount||!igAccount.handle) return '';
+  const parts=[`Instagram handle: ${igAccount.handle}`];
+  if(igAccount.followers) parts.push(`followers: ${igAccount.followers}`);
+  if(igAccount.bio) parts.push(`bio: "${igAccount.bio}"`);
+  if(igAccount.freq) parts.push(`current posting frequency: ${igAccount.freq}`);
+  return ` Account context — ${parts.join(', ')}.`;
+}
 
 function setBrand(b){
   brand=b;
@@ -282,6 +381,7 @@ function saveAll(){
 }
 
 // Init
+renderIGStatus();
 renderTabs();
 renderPanel();
 </script>
