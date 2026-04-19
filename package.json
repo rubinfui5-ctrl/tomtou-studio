@@ -1,0 +1,21 @@
+{
+  "name": "tomtou-studio",
+  "version": "1.0.0",
+  "description": "TOM × TOU Instagram AI Studio",
+  "type": "module",
+  "scripts": {
+    "dev": "python3 -m http.server 8000",
+    "build": "echo 'No build step required for static HTML'",
+    "lint": "echo 'No linter configured'"
+  },
+  "keywords": [
+    "instagram",
+    "ai",
+    "studio"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vercel/speed-insights": "^2.0.0"
+  }
+}
