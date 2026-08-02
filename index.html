@@ -63,6 +63,24 @@ footer{text-align:center;font-size:9px;letter-spacing:3px;color:#555;padding:32p
 .ig-connect-btn{margin-top:12px;width:100%;padding:11px;background:transparent;border:1px solid #e1306c;color:#e1306c;font-family:'Courier New',monospace;font-size:11px;font-weight:700;letter-spacing:3px;cursor:pointer;border-radius:4px}
 .ig-connect-btn.connected-btn{background:#e1306c22}
 .ig-disconnect-btn{margin-top:6px;width:100%;padding:8px;background:transparent;border:1px solid #1e1e1e;color:#555;font-family:'Courier New',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;border-radius:4px}
+.lp-new-btn{width:100%;padding:14px;border:1px dashed #333;border-radius:6px;background:transparent;color:#00aaff;font-family:'Courier New',monospace;font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:18px}
+.lp-card{border:1px solid #1e1e1e;border-radius:6px;padding:14px 16px;margin-bottom:12px;background:#0f0f0f}
+.lp-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}
+.lp-card-title{font-size:13px;font-weight:700;letter-spacing:1px}
+.lp-card-sub{font-size:10px;color:#555;letter-spacing:1px;margin-top:3px}
+.lp-card-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.lp-btn{padding:8px 14px;border-radius:4px;border:1px solid #1e1e1e;background:transparent;color:#efefef;font-family:'Courier New',monospace;font-size:10px;letter-spacing:2px;cursor:pointer}
+.lp-btn.primary{border-color:#00aaff;color:#00aaff}
+.lp-btn.danger{border-color:#e1306c;color:#e1306c}
+.lp-empty{padding:20px;text-align:center;font-size:11px;color:#555;letter-spacing:1px;border:1px dashed #1e1e1e;border-radius:6px}
+.lp-form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lp-form-row .field-full{grid-column:1/-1}
+.lp-accent-row{display:flex;gap:8px;margin-bottom:14px}
+.lp-accent-btn{flex:1;padding:10px;border-radius:4px;border:1px solid #1e1e1e;background:transparent;color:#555;font-family:'Courier New',monospace;font-size:10px;letter-spacing:2px;cursor:pointer}
+.lp-accent-btn.sel-tom{border-color:#00aaff;color:#00aaff;background:#001829}
+.lp-accent-btn.sel-tou{border-color:#d4f000;color:#d4f000;background:#191e00}
+.lp-form-actions{display:flex;gap:10px;margin-top:8px}
+.lp-hint{font-size:9px;color:#444;letter-spacing:1px;margin-top:-8px;margin-bottom:14px}
 </style>
 </head>
 <body>
@@ -107,6 +125,7 @@ footer{text-align:center;font-size:9px;letter-spacing:3px;color:#555;padding:32p
     <div class="views">
       <button class="view-btn active" onclick="setView('studio')" id="v-studio">⚡ STUDIO</button>
       <button class="view-btn" onclick="setView('outputs')" id="v-outputs">💾 OUTPUTS</button>
+      <button class="view-btn" onclick="setView('landing')" id="v-landing">🛒 PAGES</button>
     </div>
   </header>
 
@@ -122,6 +141,12 @@ footer{text-align:center;font-size:9px;letter-spacing:3px;color:#555;padding:32p
       <button class="save-btn" id="save-all-btn" onclick="saveAll()" style="background:#00aaff;color:#000">⬇ SAVE ALL AS .TXT</button>
     </div>
     <div id="all-outputs"></div>
+  </div>
+
+  <!-- LANDING PAGES VIEW -->
+  <div id="view-landing" style="display:none;padding-top:20px">
+    <div class="panel-desc" style="margin-bottom:16px">Build free e-commerce landing pages for your products. Everything runs in your browser — no account, no subscription, no API key needed. Download the page as a single .html file and host it free on <b style="color:#efefef">Netlify Drop</b>, <b style="color:#efefef">GitHub Pages</b>, <b style="color:#efefef">Cloudflare Pages</b>, or <b style="color:#efefef">Vercel</b>.</div>
+    <div id="landing-content"></div>
   </div>
 
   <footer>TOM × TOU · Instagram AI Studio · Built for Rub</footer>
@@ -253,9 +278,12 @@ function setView(v){
   currentView=v;
   document.getElementById('view-studio').style.display=v==='studio'?'block':'none';
   document.getElementById('view-outputs').style.display=v==='outputs'?'block':'none';
+  document.getElementById('view-landing').style.display=v==='landing'?'block':'none';
   document.getElementById('v-studio').className='view-btn'+(v==='studio'?' active':'');
   document.getElementById('v-outputs').className='view-btn'+(v==='outputs'?' active':'');
+  document.getElementById('v-landing').className='view-btn'+(v==='landing'?' active':'');
   if(v==='outputs') renderOutputs();
+  if(v==='landing') renderLandingView();
 }
 
 function setTab(i){
@@ -378,6 +406,275 @@ function saveAll(){
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url;a.download=`${brand}_instagram_strategy_${Date.now()}.txt`;a.click();
+}
+
+// ── Landing Pages (free e-commerce page builder) ────────────────────────────
+let landingPages=JSON.parse(localStorage.getItem('landingPages')||'[]');
+let landingMode='list'; // 'list' | 'form'
+let landingEditId=null;
+let landingDraft=null;
+
+function blankLandingDraft(){
+  return {id:null,name:'',title:'',tagline:'',price:'',compareAt:'',imageUrl:'',bullets:'',ctaText:'SHOP NOW',ctaLink:'',badge:'',testimonial:'',guarantee:'',accent:'TOM'};
+}
+
+function saveLandingPagesToStorage(){
+  localStorage.setItem('landingPages',JSON.stringify(landingPages));
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function slugify(s){
+  return (s||'landing-page').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-+|-+$)/g,'')||'landing-page';
+}
+
+function renderLandingView(){
+  if(landingMode==='form') renderLandingForm();
+  else renderLandingList();
+}
+
+function renderLandingList(){
+  const el=document.getElementById('landing-content');
+  const listHtml=landingPages.length?landingPages.map(p=>`
+    <div class="lp-card">
+      <div class="lp-card-head">
+        <div>
+          <div class="lp-card-title">${escapeHtml(p.name||p.title||'Untitled page')}</div>
+          <div class="lp-card-sub">${escapeHtml(p.title||'')}${p.price?' · '+escapeHtml(p.price):''}</div>
+        </div>
+      </div>
+      <div class="lp-card-actions">
+        <button class="lp-btn primary" onclick="previewLandingPage('${p.id}')">👁 PREVIEW</button>
+        <button class="lp-btn" onclick="downloadLandingPage('${p.id}')">⬇ DOWNLOAD .HTML</button>
+        <button class="lp-btn" onclick="editLandingPage('${p.id}')">✎ EDIT</button>
+        <button class="lp-btn" onclick="duplicateLandingPage('${p.id}')">⧉ DUPLICATE</button>
+        <button class="lp-btn danger" onclick="deleteLandingPage('${p.id}')">✕ DELETE</button>
+      </div>
+    </div>
+  `).join(''):`<div class="lp-empty">No landing pages yet. Create one for a product you're selling — it downloads as a single free-to-host .html file.</div>`;
+  el.innerHTML=`
+    <button class="lp-new-btn" onclick="newLandingPage()">+ NEW LANDING PAGE</button>
+    ${listHtml}
+  `;
+}
+
+function newLandingPage(){
+  landingDraft=blankLandingDraft();
+  landingEditId=null;
+  landingMode='form';
+  renderLandingView();
+}
+
+function editLandingPage(id){
+  const p=landingPages.find(x=>x.id===id);
+  if(!p) return;
+  landingDraft=Object.assign({},p);
+  landingEditId=id;
+  landingMode='form';
+  renderLandingView();
+}
+
+function duplicateLandingPage(id){
+  const p=landingPages.find(x=>x.id===id);
+  if(!p) return;
+  const copy=Object.assign({},p,{id:'lp_'+Date.now(),name:(p.name||p.title||'Untitled')+' (copy)'});
+  landingPages.push(copy);
+  saveLandingPagesToStorage();
+  renderLandingView();
+}
+
+function deleteLandingPage(id){
+  if(!confirm('Delete this landing page? This cannot be undone.')) return;
+  landingPages=landingPages.filter(x=>x.id!==id);
+  saveLandingPagesToStorage();
+  renderLandingView();
+}
+
+function updateLandingField(key,val){
+  landingDraft[key]=val;
+}
+
+function setLandingAccent(acc){
+  landingDraft.accent=acc;
+  renderLandingForm();
+}
+
+function cancelLandingForm(){
+  landingMode='list';
+  landingDraft=null;
+  landingEditId=null;
+  renderLandingView();
+}
+
+function commitLandingPage(){
+  if(!landingDraft.title.trim()||!landingDraft.ctaLink.trim()){
+    alert('At minimum, fill in the product title and the checkout/CTA link.');
+    return;
+  }
+  if(landingEditId){
+    const idx=landingPages.findIndex(x=>x.id===landingEditId);
+    landingPages[idx]=Object.assign({},landingDraft,{id:landingEditId});
+  }else{
+    landingDraft.id='lp_'+Date.now();
+    landingPages.push(landingDraft);
+  }
+  saveLandingPagesToStorage();
+  landingMode='list';
+  landingDraft=null;
+  landingEditId=null;
+  renderLandingView();
+}
+
+function renderLandingForm(){
+  const d=landingDraft;
+  const el=document.getElementById('landing-content');
+  el.innerHTML=`
+    <div class="panel-title">${landingEditId?'✎ Edit Landing Page':'+ New Landing Page'}</div>
+    <div class="panel-desc">Fill in your product details. Blank optional fields are simply left off the page.</div>
+    <div class="lp-accent-row">
+      <button class="lp-accent-btn${d.accent==='TOM'?' sel-tom':''}" onclick="setLandingAccent('TOM')">TOM BLUE</button>
+      <button class="lp-accent-btn${d.accent==='TOU'?' sel-tou':''}" onclick="setLandingAccent('TOU')">TOU YELLOW</button>
+    </div>
+    <div class="field-group">
+      <label>INTERNAL NAME (for your list only)</label>
+      <input type="text" value="${escapeHtml(d.name)}" placeholder="e.g. Midnight Oud — launch page" oninput="updateLandingField('name',this.value)"/>
+    </div>
+    <div class="field-group">
+      <label>PRODUCT TITLE *</label>
+      <input type="text" value="${escapeHtml(d.title)}" placeholder="e.g. Midnight Oud" oninput="updateLandingField('title',this.value)"/>
+    </div>
+    <div class="field-group">
+      <label>TAGLINE</label>
+      <input type="text" value="${escapeHtml(d.tagline)}" placeholder="e.g. Designer scent. Fraction of the price." oninput="updateLandingField('tagline',this.value)"/>
+    </div>
+    <div class="lp-form-row">
+      <div class="field-group">
+        <label>PRICE</label>
+        <input type="text" value="${escapeHtml(d.price)}" placeholder="e.g. $29.99" oninput="updateLandingField('price',this.value)"/>
+      </div>
+      <div class="field-group">
+        <label>COMPARE-AT PRICE (optional)</label>
+        <input type="text" value="${escapeHtml(d.compareAt)}" placeholder="e.g. $79.99" oninput="updateLandingField('compareAt',this.value)"/>
+      </div>
+    </div>
+    <div class="field-group">
+      <label>PRODUCT IMAGE URL</label>
+      <input type="text" value="${escapeHtml(d.imageUrl)}" placeholder="https://... (paste an image link)" oninput="updateLandingField('imageUrl',this.value)"/>
+    </div>
+    <div class="field-group">
+      <label>FEATURES / BENEFITS (one per line)</label>
+      <textarea rows="4" placeholder="Lasts 8+ hours\nCruelty-free\nFree shipping over $40" oninput="updateLandingField('bullets',this.value)">${escapeHtml(d.bullets)}</textarea>
+    </div>
+    <div class="lp-form-row">
+      <div class="field-group">
+        <label>BUTTON TEXT</label>
+        <input type="text" value="${escapeHtml(d.ctaText)}" placeholder="SHOP NOW" oninput="updateLandingField('ctaText',this.value)"/>
+      </div>
+      <div class="field-group">
+        <label>CHECKOUT / CTA LINK *</label>
+        <input type="text" value="${escapeHtml(d.ctaLink)}" placeholder="your Shopify/checkout URL" oninput="updateLandingField('ctaLink',this.value)"/>
+      </div>
+    </div>
+    <div class="field-group">
+      <label>BADGE (optional)</label>
+      <input type="text" value="${escapeHtml(d.badge)}" placeholder="e.g. 🔥 Limited stock — 24 left" oninput="updateLandingField('badge',this.value)"/>
+    </div>
+    <div class="field-group">
+      <label>TESTIMONIAL QUOTE (optional)</label>
+      <textarea rows="2" placeholder="e.g. Best purchase I've made all year." oninput="updateLandingField('testimonial',this.value)">${escapeHtml(d.testimonial)}</textarea>
+    </div>
+    <div class="field-group">
+      <label>GUARANTEE / TRUST LINE (optional)</label>
+      <input type="text" value="${escapeHtml(d.guarantee)}" placeholder="e.g. 30-Day Money-Back Guarantee · Free Shipping" oninput="updateLandingField('guarantee',this.value)"/>
+    </div>
+    <div class="lp-hint">* required to save. Nothing here is sent anywhere — it's saved only in this browser until you save/download.</div>
+    <div class="lp-form-actions">
+      <button class="lp-btn" onclick="cancelLandingForm()">← CANCEL</button>
+      <button class="lp-btn primary" onclick="commitLandingPage()">✓ SAVE PAGE</button>
+    </div>
+  `;
+}
+
+function generateLandingHTML(p){
+  const accent=p.accent==='TOU'?'#d4f000':'#00aaff';
+  const accentDark=p.accent==='TOU'?'#8a9c00':'#0077b3';
+  const bullets=(p.bullets||'').split('\n').map(b=>b.trim()).filter(Boolean)
+    .map(b=>`<li>${escapeHtml(b)}</li>`).join('');
+  const hasCompare=p.compareAt&&p.compareAt.trim();
+  const heroImg=p.imageUrl&&p.imageUrl.trim()
+    ?`<img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.title)}" class="lp-hero-img"/>`
+    :`<div class="lp-hero-placeholder">${escapeHtml((p.title||'?').charAt(0).toUpperCase())}</div>`;
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>${escapeHtml(p.title||'Product')}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#fafafa;color:#111;line-height:1.5}
+.lp-wrap{max-width:520px;margin:0 auto;padding:0 20px 60px}
+.lp-badge{display:inline-block;margin:20px auto 0;background:${accent}22;color:${accentDark};border:1px solid ${accent};padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;text-align:center}
+.lp-badge-row{text-align:center}
+.lp-hero-img{width:100%;border-radius:16px;margin:20px 0;object-fit:cover;max-height:420px}
+.lp-hero-placeholder{width:100%;height:280px;border-radius:16px;margin:20px 0;background:linear-gradient(135deg,${accent},${accentDark});display:flex;align-items:center;justify-content:center;color:#fff;font-size:80px;font-weight:800}
+h1{font-size:clamp(26px,7vw,38px);font-weight:800;text-align:center;margin-bottom:8px}
+.lp-tagline{text-align:center;color:#666;font-size:16px;margin-bottom:20px}
+.lp-price-row{display:flex;align-items:baseline;justify-content:center;gap:10px;margin:18px 0}
+.lp-price{font-size:32px;font-weight:800;color:${accentDark}}
+.lp-compare{font-size:18px;color:#999;text-decoration:line-through}
+.lp-cta{display:block;width:100%;text-align:center;padding:18px;border-radius:12px;background:${accent};color:#111;font-size:17px;font-weight:800;letter-spacing:1px;text-decoration:none;margin:20px 0;box-shadow:0 8px 24px ${accent}55}
+.lp-features{list-style:none;margin:24px 0;padding:20px;background:#fff;border-radius:14px;border:1px solid #eee}
+.lp-features li{padding:8px 0 8px 28px;position:relative;font-size:15px}
+.lp-features li::before{content:'✓';position:absolute;left:0;color:${accentDark};font-weight:800}
+.lp-testimonial{background:#fff;border-left:4px solid ${accent};border-radius:8px;padding:18px 20px;margin:24px 0;font-style:italic;color:#333}
+.lp-guarantee{text-align:center;font-size:13px;color:#666;margin:20px 0;padding:14px;background:#fff;border-radius:10px;border:1px solid #eee}
+.lp-footer{text-align:center;font-size:11px;color:#aaa;margin-top:40px;letter-spacing:1px}
+@media(prefers-color-scheme:dark){
+  body{background:#0b0b0b;color:#eee}
+  .lp-features,.lp-testimonial,.lp-guarantee{background:#161616;border-color:#242424}
+  .lp-tagline,.lp-guarantee{color:#999}
+}
+</style>
+</head>
+<body>
+<div class="lp-wrap">
+  ${p.badge?`<div class="lp-badge-row"><span class="lp-badge">${escapeHtml(p.badge)}</span></div>`:''}
+  ${heroImg}
+  <h1>${escapeHtml(p.title||'Your Product')}</h1>
+  ${p.tagline?`<div class="lp-tagline">${escapeHtml(p.tagline)}</div>`:''}
+  ${p.price?`<div class="lp-price-row">${hasCompare?`<span class="lp-compare">${escapeHtml(p.compareAt)}</span>`:''}<span class="lp-price">${escapeHtml(p.price)}</span></div>`:''}
+  <a class="lp-cta" href="${escapeHtml(p.ctaLink||'#')}" target="_blank" rel="noopener">${escapeHtml(p.ctaText||'SHOP NOW')}</a>
+  ${bullets?`<ul class="lp-features">${bullets}</ul>`:''}
+  ${p.testimonial?`<div class="lp-testimonial">"${escapeHtml(p.testimonial)}"</div>`:''}
+  ${p.guarantee?`<div class="lp-guarantee">🛡️ ${escapeHtml(p.guarantee)}</div>`:''}
+  <a class="lp-cta" href="${escapeHtml(p.ctaLink||'#')}" target="_blank" rel="noopener" style="margin-top:8px">${escapeHtml(p.ctaText||'SHOP NOW')}</a>
+  <div class="lp-footer">Made with TOM × TOU</div>
+</div>
+</body>
+</html>`;
+}
+
+function previewLandingPage(idOrDraft){
+  const p=typeof idOrDraft==='string'?landingPages.find(x=>x.id===idOrDraft):idOrDraft;
+  if(!p) return;
+  const html=generateLandingHTML(p);
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  window.open(url,'_blank');
+}
+
+function downloadLandingPage(id){
+  const p=landingPages.find(x=>x.id===id);
+  if(!p) return;
+  const html=generateLandingHTML(p);
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`${slugify(p.name||p.title)}.html`;a.click();
+  URL.revokeObjectURL(url);
 }
 
 // Init
